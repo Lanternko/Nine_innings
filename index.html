@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>9-Inning Baseball Simulator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>9-Inning Baseball Simulator</h1>
+
+    <div class="game-layout">
+        <div class="team-panel" id="awayTeamPanel">
+            <h3 id="awayTeamNameDisplay">Away Team <span class="team-record" id="awayTeamRecord">(0-0)</span></h3>
+            <div class="current-player-display" id="awayCurrentPlayerDisplay">
+                </div>
+            <h4>Lineup</h4>
+            <ul id="awayTeamLineupList" class="lineup-list">
+                </ul>
+            <h4 class="bullpen-title">Pitchers</h4>
+            <ul id="awayTeamBullpenList" class="bullpen-list">
+                </ul>
+        </div>
+
+        <div class="main-game-area">
+            <div class="mobile-player-info-container">
+                <div class="mobile-player-display" id="mobileBatterDisplay">
+                    </div>
+                <div class="mobile-player-display" id="mobilePitcherDisplay">
+                    </div>
+            </div>
+
+            <div class="scoreboard-container">
+                <h2>Scoreboard</h2>
+                <table id="scoreboard">
+                     <thead>
+                        <tr>
+                            <th>Team</th>
+                            <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th>
+                            <th>R</th><th>H</th><th>E</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr id="awayTeamScore">
+                            <td class="team-name">Away</td>
+                            <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
+                            <td class="total-runs">0</td><td class="total-hits">0</td><td class="total-errors">0</td>
+                        </tr>
+                        <tr id="homeTeamScore">
+                            <td class="team-name">Home</td>
+                             <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
+                            <td class="total-runs">0</td><td class="total-hits">0</td><td class="total-errors">0</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="field-display">
+                <div class="field-header">
+                    <div id="inningDisplay">
+                        <span class="inning-indicator"></span>
+                        <span class="inning-number">-</span>
+                    </div>
+                    <div id="outsDisplay">
+                        <span class="out-light"></span>
+                        <span class="out-light"></span>
+                        <span class="out-light"></span>
+                    </div>
+                </div>
+                <div id="basesDisplay">
+                    <div class="diamond-area">
+                        <div class="base base-third" id="thirdBase"><span class="base-label">3B</span></div>
+                        <div class="base base-second" id="secondBase"><span class="base-label">2B</span></div>
+                        <div class="base base-first" id="firstBase"><span class="base-label">1B</span></div>
+                        <div class="runner-name" id="runnerName3B"></div>
+                        <div class="runner-name" id="runnerName2B"></div>
+                        <div class="runner-name" id="runnerName1B"></div>
+                    </div>
+                </div>
+                 <div id="scoreFlash" class="score-flash"></div>
+            </div>
+
+            <div id="at-bat-outcome">
+                <h2>Last Play:</h2>
+                <p id="outcome-text">- - -</p>
+            </div>
+
+             <div class="game-controls">
+                <button id="startGameButton">Start New Game</button>
+                <button id="nextPlayButton" style="display:none;">Next Batter</button>
+                <div class="simulation-controls" style="display:none;"> <button id="simInningButton">Sim Inning</button>
+                    <button id="simGameButton">Sim Game</button>
+                    <button id="sim10GamesButton">Skip 10 Games</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="team-panel" id="homeTeamPanel">
+            <h3 id="homeTeamNameDisplay">Home Team <span class="team-record" id="homeTeamRecord">(0-0)</span></h3>
+            <div class="current-player-display" id="homeCurrentPlayerDisplay">
+                </div>
+            <h4>Lineup</h4>
+            <ul id="homeTeamLineupList" class="lineup-list">
+                </ul>
+            <h4 class="bullpen-title">Pitchers</h4>
+            <ul id="homeTeamBullpenList" class="bullpen-list">
+                </ul>
+        </div>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

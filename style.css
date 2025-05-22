@@ -1,0 +1,577 @@
+/* General Body and Layout */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.5;
+    margin: 0;
+    padding: 10px;
+    background-color: #eef1f5;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 14px; /* Base font size */
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+h1 {
+    color: #1a3b5d;
+    text-align: center;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    font-size: 1.7em;
+}
+h2 {
+    color: #1a3b5d;
+    text-align: center;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    font-size: 1.2em;
+}
+h3 { /* Team names in panels */
+    font-size: 1.1em;
+    color: #1a3b5d;
+    margin-top: 5px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #d0d9e2;
+    padding-bottom: 5px;
+    text-align: center;
+}
+h4 { /* "Lineup" title & "Bullpen" title */
+    font-size: 0.9em;
+    color: #345;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.bullpen-title { /* Specific for "Pitchers" title above bullpen */
+    margin-top: 20px;
+}
+
+.game-layout {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 1500px;
+    margin: 0 auto;
+    gap: 15px;
+    align-items: flex-start;
+}
+
+/* Side Panels (Desktop View) */
+.team-panel {
+    width: 300px;
+    padding: 10px 15px;
+    background-color: #fdfdff; /* Default background */
+    border: 3px solid #dde;    /* Default border */
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    height: fit-content;
+    max-height: calc(100vh - 60px); /* Adjusted for potential scroll */
+    overflow-y: auto;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+.team-panel.batting-team {
+    background-color: #fefefece;
+    border-color: #0b1b32;
+}
+.team-panel.fielding-team {
+    background-color: #ffffff;
+    border-color: #ffffff53;
+}
+.team-panel.fielding-team .current-player-display {
+    background-color: #e0e0e0ce;
+}
+.team-record {
+    font-size: 0.8em;
+    font-weight: normal;
+    color: #555;
+    margin-left: 8px;
+    display: inline-block;
+}
+
+/* Current Player Display (Desktop and Mobile - common base for OVR coloring) */
+.current-player-display,
+.mobile-player-display {
+    transition: border-color 0.3s ease, background-color 0.2s ease;
+    border: 2px solid #c8d6e5; /* Default border, overridden by OVR */
+}
+
+/* OVR Tier Styling for Panels and Player Displays */
+.ovr-tier-gray { border-color: #adb5bd !important; background-color: #f8f9fa !important; }
+.ovr-tier-blue { border-color: #36a1ff !important; background-color: #e7f1ff !important; }
+.ovr-tier-red { border-color: #dc3545 !important; background-color: #fdebec !important; }
+.ovr-tier-green { border-color: #14af4b !important; background-color: #e8f5e9 !important; }
+.ovr-tier-golden { border-color: #ffea00 !important; background-color: #fff8e1 !important; }
+
+
+/* Current Player Display Content (Desktop View) */
+.current-player-display {
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 10px;
+    min-height: 120px;
+}
+.current-player-display h5 {
+    margin: 0 0 8px 0;
+    font-size: 1em;
+    color: #0a318d;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-bottom: 1px solid #c8d6e5;
+    padding-bottom: 6px;
+    min-height: 75px; 
+    justify-content: space-around;
+    box-sizing: border-box;
+}
+.current-player-display .player-main-name {
+    font-size: 1.15em;
+    font-weight: 600;
+    width: 95%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+    display: block;
+}
+.current-player-display .player-role-info, 
+.current-player-display .player-ovr-info, 
+.current-player-display .player-career-stat { 
+    font-size: 0.85em;
+    font-weight: normal;
+    color: #444;
+    text-align: center;
+    width: 100%;
+    line-height: 1.3;
+}
+.current-player-display .player-career-stat {
+    color: #0056b3;
+    font-style: italic;
+}
+.current-player-display .player-stats-detailed {
+    font-size: 0.85em;
+    line-height: 1.6;
+    color: #333;
+    margin-bottom: 8px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 8px;
+    align-items: center;
+}
+.current-player-display .stat-label {
+    font-weight: bold;
+    color: #445;
+    text-align: right;
+    font-size: 0.9em;
+}
+.current-player-display .stat-value {
+    font-weight: bold;
+    text-align: center;
+    padding: 2px 5px;
+    border-radius: 4px;
+    background-color: #333;
+    color: #fff;
+    min-width: 22px;
+    display: inline-block;
+    font-size: 0.9em;
+}
+.stat-value.stat-low { color: #bdc3c7 !important; }
+.stat-value.stat-medium { color: #a5d6a7 !important; }
+.stat-value.stat-high { color: #fff59d !important; }
+.stat-value.stat-elite { color: #ef9a9a !important; }
+
+.current-player-display .player-history {
+    font-size: 0.8em;
+    color: #5a677a;
+    font-style: italic;
+    margin-top: 8px;
+    border-top: 1px dashed #c8d6e5;
+    padding-top: 8px;
+    line-height: 1.4;
+}
+.current-player-display .player-history span {
+    margin-right: 5px;
+    padding: 1px 3px;
+    background-color: #f0f4f8;
+    border-radius: 3px;
+    border: 1px solid #dde;
+    font-size: 0.9em;
+}
+
+/* Lineup List (Desktop) */
+.team-panel ul.lineup-list { list-style-type: none; padding: 0; margin: 0; }
+.team-panel ul.lineup-list li {
+    font-size: 0.85em;
+    padding: 6px 3px;
+    border-bottom: 1px solid #f0f0f0;
+    display: grid; 
+    grid-template-columns: 30px 1fr auto; 
+    gap: 8px; 
+    align-items: center;
+    line-height: 1.3;
+    transition: background-color 0.2s ease;
+}
+.team-panel ul.lineup-list li:last-child { border-bottom: none; }
+
+.player-ovr-lineup {
+    font-weight: bold;
+    font-size: 0.9em;
+    flex-shrink: 0;
+    text-align: left;
+}
+.player-name-lineup {
+    text-align: left; 
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: normal;
+}
+.batter-career-stats { 
+    font-size: 0.85em; 
+    color: #495057;
+    font-weight: normal;
+    min-width: 65px; 
+    text-align: right;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.team-panel ul.lineup-list li.current-batter-in-lineup {
+    background-color: #dcdcdc; 
+}
+.team-panel ul.lineup-list li.current-batter-in-lineup .player-ovr-lineup,
+.team-panel ul.lineup-list li.current-batter-in-lineup .player-name-lineup,
+.team-panel ul.lineup-list li.current-batter-in-lineup .batter-career-stats {
+    color: #000000; 
+    font-weight: bold;
+}
+
+/* OVR Tier Text Colors for Lineup */
+.player-ovr-lineup.ovr-tier-gray,
+.player-name-lineup.ovr-tier-gray { color: #6c757d; }
+.player-ovr-lineup.ovr-tier-blue,
+.player-name-lineup.ovr-tier-blue { color: #0056b3; }
+.player-ovr-lineup.ovr-tier-red,
+.player-name-lineup.ovr-tier-red { color: #b02a37; }
+.player-ovr-lineup.ovr-tier-green,
+.player-name-lineup.ovr-tier-green { color: #155724; }
+.player-ovr-lineup.ovr-tier-golden,
+.player-name-lineup.ovr-tier-golden { color: #b08d00; }
+
+
+/* Bullpen List Styling */
+.team-panel ul.bullpen-list { list-style-type: none; padding: 0; margin: 0; }
+.team-panel ul.bullpen-list li {
+    padding: 5px 3px;
+    font-size: 0.8em;
+    display: grid;
+    grid-template-columns: 30px 1fr auto 45px auto; 
+    gap: 5px;
+    align-items: center;
+    border-bottom: 1px solid #f0f0f0;
+}
+.team-panel ul.bullpen-list li:last-child { border-bottom: none; }
+
+.bullpen-pitcher-ovr {
+    font-weight: bold;
+    text-align: left;
+}
+.bullpen-pitcher-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: left;
+}
+.bullpen-pitcher-role {
+    font-style: italic;
+    color: #555;
+    text-align: right;
+}
+.bullpen-pitcher-era { 
+    font-size: 0.9em;
+    color: #333;
+    text-align: center;
+    min-width: 40px; 
+}
+.bullpen-pitcher-stamina {
+    font-size: 0.9em;
+    color: #333;
+    background-color: #f0f0f0;
+    padding: 1px 4px;
+    border-radius: 3px;
+    text-align: center;
+    min-width: 40px;
+}
+.bullpen-list li.active-pitcher-in-bullpen {
+    background-color: #e9ecef;
+    font-weight: bold;
+}
+.bullpen-list li.active-pitcher-in-bullpen .bullpen-pitcher-ovr,
+.bullpen-list li.active-pitcher-in-bullpen .bullpen-pitcher-name,
+.bullpen-list li.active-pitcher-in-bullpen .bullpen-pitcher-role,
+.bullpen-list li.active-pitcher-in-bullpen .bullpen-pitcher-era,
+.bullpen-list li.active-pitcher-in-bullpen .bullpen-pitcher-stamina {
+    color: #000000; 
+}
+
+
+/* --- Main Game Area & Mobile Styles --- */
+.main-game-area {
+    flex-grow: 1; min-width: 0; display: flex; flex-direction: column; align-items: center;
+}
+.scoreboard-container {
+    width: 100%; max-width: 800px; background-color: #fff; padding: 10px 12px;
+    border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.06); margin-bottom: 12px;
+    text-align: center; overflow-x: auto;
+}
+#scoreboard { width: 100%; border-collapse: collapse; margin-top: 8px; }
+#scoreboard th, #scoreboard td {
+    border: 1px solid #e0e6ec; padding: 4px 6px; text-align: center;
+    font-size: 0.75em; min-width: 22px; white-space: nowrap;
+}
+#scoreboard th { background-color: #f0f4f8; color: #1a3b5d; font-weight: bold; }
+#scoreboard .team-name { text-align: left; font-weight: bold; background-color: #f8f9fa; min-width: 70px; }
+#scoreboard .total-runs, #scoreboard .total-hits, #scoreboard .total-errors { font-weight: bold; background-color: #e9ecef; min-width: 28px; }
+#scoreboard th.current-inning-active, #scoreboard td.current-inning-active {
+    background-color: #d1e7fd !important; font-weight: bold; box-shadow: inset 0 0 5px rgba(0, 86, 179, 0.2);
+}
+.field-display {
+    width: 100%; max-width: 550px; background-color: #fff; padding: 12px;
+    border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.06); margin-bottom: 12px;
+    text-align: center; position: relative;
+}
+.field-header {
+    display: flex; justify-content: space-around; align-items: center; margin-bottom: 12px;
+    font-weight: bold; font-size: 1.1em; color: #1a3b5d; padding-bottom: 6px; border-bottom: 1px solid #ddd;
+}
+.field-header div { flex-basis: 45%; text-align: center; }
+#inningDisplay { display: flex; align-items: center; justify-content: center; }
+.inning-indicator { display: inline-block; width: 0; height: 0; margin-right: 5px; border-left: 6px solid transparent; border-right: 6px solid transparent; transition: border-color 0.3s ease; }
+.inning-indicator.top { border-bottom: 10px solid #3498db; }
+.inning-indicator.bottom { border-top: 10px solid #e74c3c; }
+.inning-number { margin-left: 3px; }
+#outsDisplay { display: flex; align-items: center; justify-content: center; }
+.out-light {
+    display: inline-block; width: 18px; height: 18px; border-radius: 50%; background-color: #ccc;
+    margin: 0 3px; border: 1px solid #aaa; box-shadow: inset 0 0 3px rgba(0,0,0,0.2);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+.out-light.active {
+    background-color: #e74c3c; border-color: #c0392b;
+    box-shadow: inset 0 0 3px rgba(0,0,0,0.1), 0 0 8px rgba(231, 76, 60, 0.7);
+}
+.field-display .diamond-area { position: relative; width: 160px; height: 120px; margin: 20px auto 15px auto; }
+.field-display .diamond-area .base {
+    position: absolute; width: 50px; height: 50px; border: 2px solid #888; background-color: #fdfdff;
+    color: #444; font-weight: bold; display: flex; justify-content: center; align-items: center;
+    font-size: 0.85em; box-shadow: 1px 1px 3px rgba(0,0,0,0.15); transform-origin: center center;
+    transform: rotate(-45deg);
+}
+.field-display .diamond-area .base.occupied-base { background-color: #6cace4; border-color: #4a8cc2; color: #fff; }
+.base .base-label { display: inline-block; transform: rotate(45deg); }
+.base-first { top: 50%; right: 0; transform: translate(50%, -50%) rotate(-45deg); }
+.base-second { top: 0; left: 34%; transform: translate(-50%, -50%) rotate(-45deg); }
+.base-third { top: 50%; left: 0; transform: translate(-50%, -50%) rotate(-45deg); }
+.field-display .runner-name {
+    position: absolute; font-size: 0.8em; font-weight: bold; color: #004a8d;
+    background-color: rgba(220, 234, 255, 0.95); padding: 1px 4px; border-radius: 3px;
+    white-space: nowrap; box-shadow: 0 1px 2px rgba(0,0,0,0.1); display: none; z-index: 5;
+}
+#runnerName1B { top: calc(50% - 8px); right: -75px; }
+#runnerName2B { top: -30px; left: 50%; transform: translateX(-50%); }
+#runnerName3B { top: calc(50% - 8px); left: -75px; }
+.score-flash {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 2.5em; font-weight: bold; color: #ffbf00; text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+    opacity: 0; transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    pointer-events: none; z-index: 100;
+}
+.score-flash.show { opacity: 1; transform: translate(-50%, -50%) scale(1.3); }
+#at-bat-outcome { width: 100%; max-width: 600px; margin-top: 12px; padding: 10px; text-align: center;}
+#at-bat-outcome h2 { font-size: 1em; margin-bottom: 4px; color: #333; }
+#outcome-text { font-size: 1.05em; min-height: 22px; font-weight: 500; }
+.outcome-neutral { color: #555; }
+.outcome-strikeout { color: #000000; font-weight: bold; }
+.outcome-out { color: #546e7a; font-style: italic; }
+.outcome-homerun { color: #2e7d32; font-size: 1.2em; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
+.outcome-single, .outcome-double, .outcome-triple { color: #0277bd; font-weight: bold; }
+.outcome-walk, .outcome-walks { color: #512da8; }
+.outcome-game_event { color: #78909c; font-style: italic;}
+.outcome-game_over { color: #000; font-weight: bold; font-size: 1.1em;}
+
+.game-controls { margin-top: 15px; width: 100%; max-width: 600px; text-align: center; }
+.game-controls button {
+    padding: 10px 18px; /* Adjusted padding */
+    font-size: 1em;    /* Adjusted font size */
+    margin: 5px;
+    min-width: 120px;  /* Adjusted min-width */
+    border-radius: 5px; border: none; cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+#startGameButton { background-color: #28a745; color: white; }
+#startGameButton:hover { background-color: #218838; }
+#nextPlayButton { background-color: #007bff; color: white; }
+#nextPlayButton:hover { background-color: #0056b3; }
+#nextPlayButton:disabled,
+.simulation-controls button:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+#nextPlayButton.simulating,
+.simulation-controls button.simulating { /* Class for active simulation button */
+    background-color: #ffc107;
+    color: #212529;
+    cursor: default;
+}
+.game-controls button:active { transform: translateY(1px); }
+
+.simulation-controls {
+    margin-top: 10px;
+    display: flex; /* Use flexbox for better alignment */
+    justify-content: center;
+    flex-wrap: wrap; /* Allow buttons to wrap on smaller screens if needed */
+    gap: 10px; /* Space between simulation buttons */
+}
+.simulation-controls button {
+    background-color: #6f42c1; /* Purple theme for sim buttons */
+    color: white;
+    min-width: 120px; /* Consistent width */
+}
+.simulation-controls button:hover {
+    background-color: #5a32a3;
+}
+
+
+.stamina-bar-container{
+    position:relative;
+    width:100%;
+    height:1em;
+    border-radius:4px;
+    overflow:hidden;
+    background:linear-gradient(
+        to right,
+        red 0%,
+        rgb(255, 229, 35) 30%, 
+        rgb(82, 255, 82) 100%
+    );
+    border:1px solid #bbb;
+    box-sizing: border-box;
+}
+.stamina-empty{
+    position:absolute;
+    right:0;
+    top:0;
+    height:100%;
+    background:#e0e0e0;
+    transition:width .3s ease;
+}
+.stamina-text{
+    position:absolute;
+    left:50%;
+    top:50%;
+    text-align: center;
+    transform:translate(-50%,-50%);
+    font-size:.75em;
+    color:#000;
+    pointer-events:none;
+    line-height: 1;
+    white-space: nowrap;
+    width: 100%;
+    text-shadow: none;
+}
+
+
+/* --- Mobile Specific Styles --- */
+@media (max-width: 768px) {
+    body { padding: 5px; font-size: 13px; }
+    h1 { font-size: 1.4em; margin-bottom: 8px; }
+    .game-layout { flex-direction: column; align-items: center; gap: 10px; }
+    .team-panel { display: none; } 
+    .main-game-area { width: 100%; padding: 5px 0; }
+
+    .mobile-player-info-container { display: flex; justify-content: space-between; margin-bottom: 10px; width: 100%; gap: 8px; }
+    .mobile-player-display {
+        width: calc(50% - 4px); padding: 8px; border-radius: 6px;
+        background-color: #fff; box-sizing: border-box; display: flex; flex-direction: column;
+    }
+    .mobile-player-display h5 {
+        margin: 0 0 6px 0; border-bottom: 1px solid #e0e6ec; padding-bottom: 4px;
+        box-sizing: border-box; height: 75px; display: flex; flex-direction: column;
+        justify-content: space-around; align-items: center; overflow: hidden; font-size: 0.9rem;
+    }
+    .mobile-player-display h5 .player-main-name {
+        font-size: 1em; font-weight: 600; color: #1a3b5d; text-align: center; width: 98%;
+        line-height: 1.25; height: calc(1em * 1.25 * 2); overflow: hidden;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    }
+    .mobile-player-display h5 .player-role-info,
+    .mobile-player-display h5 .player-ovr-info,
+    .mobile-player-display h5 .player-career-stat {
+        font-size: 0.8em; color: #555; text-align: center; width: 100%; line-height: 1.2;
+    }
+    .mobile-player-display h5 .player-career-stat { font-style: italic; color: #0056b3; }
+
+    .mobile-player-display .player-stats-detailed {
+        font-size: 0.75em; gap: 2px 5px; display: grid;
+        grid-template-columns: auto 1fr; align-items: center;
+    }
+    .mobile-player-display .stat-label { font-weight: bold; color: #334455; text-align: right; font-size: 0.9em; }
+    .mobile-player-display .stat-value {
+        padding: 1px 3px; font-size: 0.9em; min-width: 18px;
+        background-color: #333; color: #fff;
+    }
+    .mobile-player-display .player-history { display: none; }
+    .mobile-player-display .stamina-bar-container { height: 0.8em; margin-top: 1px;}
+    .mobile-player-display .stamina-text { font-size: 0.65em; }
+
+    .scoreboard-container { margin-bottom: 8px; padding: 8px 5px; }
+    #scoreboard th, #scoreboard td { padding: 3px 4px; font-size: 0.7em; min-width: 20px; }
+    #scoreboard .team-name { min-width: 50px; }
+    #scoreboard .total-runs, #scoreboard .total-hits, #scoreboard .total-errors { min-width: 25px; }
+    #scoreboard th:not(:first-child):not(:nth-last-child(1)):not(:nth-last-child(2)):not(:nth-last-child(3)),
+    #scoreboard td:not(:first-child):not(:nth-last-child(1)):not(:nth-last-child(2)):not(:nth-last-child(3)) {
+        display: none;
+    }
+    .scoreboard-container h2 { display: none; } 
+
+    .field-display { padding: 8px; margin-bottom: 8px; max-width: 100%; }
+    .field-header { font-size: 1em; margin-bottom: 8px; padding-bottom: 4px;}
+    .out-light { width: 15px; height: 15px; margin: 0 2px;}
+    .field-display .diamond-area { width: 130px; height: 100px; margin: 10px auto 8px auto; }
+    .field-display .diamond-area .base { width: 35px; height: 35px; font-size: 0.75em; border-width: 1px;}
+    #runnerName1B { top: calc(50% - 7px); right: -60px; font-size: 0.7em; }
+    #runnerName2B { top: -25px; font-size: 0.7em;}
+    #runnerName3B { top: calc(50% - 7px); left: -60px; font-size: 0.7em;}
+    #at-bat-outcome { margin-top: 8px; padding: 6px; }
+    #at-bat-outcome h2 { font-size: 0.9em; margin-bottom: 2px; }
+    #outcome-text { font-size: 0.95em; min-height: 18px; }
+    .game-controls { flex-direction: column; align-items: center; } /* Stack buttons vertically */
+    .game-controls button { padding: 10px 15px; font-size: 0.95em; width: 90%; max-width: 280px; min-height: 40px; }
+    .simulation-controls { flex-direction: column; width: 90%; max-width: 280px;}
+    .simulation-controls button { width: 100%; }
+}
+
+@media (max-width: 380px) {
+    body { font-size: 12px; }
+    h1 { font-size: 1.2em; }
+    .mobile-player-display h5 { height: 70px; font-size:0.85rem; }
+     .mobile-player-display h5 .player-main-name { line-height: 1.2; height: calc(1em * 1.2 * 2); }
+    .mobile-player-display .player-stats-detailed { font-size: 0.7em; }
+    .field-display .diamond-area { width: 110px; height: 80px; }
+    .field-display .diamond-area .base { width: 30px; height: 30px; font-size: 0.7em;}
+    #runnerName1B { right: -50px; font-size: 0.65em; }
+    #runnerName2B { top: -22px; font-size: 0.65em;}
+    #runnerName3B { left: -50px; font-size: 0.65em;}
+    .game-controls button { padding: 10px 15px; font-size: 0.9em; min-height: 38px; }
+}
+
+@media (min-width: 769px) {
+    .mobile-player-info-container { display: none; }
+}
