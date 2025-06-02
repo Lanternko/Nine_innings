@@ -82,55 +82,79 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function runSinglePlayAndUpdate() {
+
+    // MAKE THIS FUNCTION ASYNC
+    async function runSinglePlayAndUpdate() {
         if (getGameState().gameOver) {
-            stopLongPressSimulation();
+            stopLongPressSimulation(); // This should already be handled by enableGameControls
             enableGameControls(true);
             return false;
         }
-        isLongPressSimulating = true;
+        // isLongPressSimulating = true; // This state might be managed differently if long press is refactored
+
         try {
-            playNextAtBat(currentTeamsData); // gameLogic's endGame will handle saving teamRecords
-            const newState = getGameState();
-            currentTeamRecords = loadData(TEAM_RECORDS_KEY, currentTeamRecords); // Reload records to get updated starterIndex
+            // Ensure playNextAtBat is awaited
+            await playNextAtBat(currentTeamsData); 
+            
+            const newState = getGameState(); // Get state *after* playNextAtBat completes
+            currentTeamRecords = loadData(TEAM_RECORDS_KEY, currentTeamRecords); 
             updateAllDisplays(newState, currentTeamsData, currentTeamRecords);
 
             if (newState.gameOver) {
-                stopLongPressSimulation();
+                stopLongPressSimulation(); // If game ends, stop any long press
                 enableGameControls(true);
-                return false;
+                return false; // Indicate simulation step should stop
             }
         } catch (error) {
             console.error("Error during simulation step:", error);
             stopLongPressSimulation();
-            enableGameControls(getGameState().gameOver);
-            return false;
+            enableGameControls(getGameState().gameOver); // Pass current gameOver state
+            return false; // Indicate simulation step should stop
         } finally {
-            isLongPressSimulating = false;
+            // isLongPressSimulating = false; // Manage this state carefully if refactoring long press
         }
-        return true;
+        return true; // Indicate simulation step completed successfully (game not over)
+    }
+
+    let longPressActive = false; // New flag to control the async loop
+
+    async function longPressLoop() {
+        if (!longPressActive || getGameState().gameOver || !isLongPressSimulating) { // Add isLongPressSimulating check
+            stopLongPressSimulation(); // Ensure controls are re-enabled correctly
+            return;
+        }
+
+        const playSuccessful = await runSinglePlayAndUpdate();
+        if (playSuccessful && longPressActive && isLongPressSimulating) { // Check flags again
+            setTimeout(longPressLoop, SIM_INTERVAL_DELAY); // Schedule next iteration
+        } else {
+            stopLongPressSimulation(); // Handles gameOver or error cases from runSinglePlayAndUpdate
+        }
     }
 
     function startLongPressSimulation() {
-        if (longPressSimInterval || getGameState().gameOver || isBatchSimulating) return;
-        isLongPressSimulating = true;
+        if (getGameState().gameOver || isBatchSimulating || isLongPressSimulating) return; // Prevent multiple starts
+
+        isLongPressSimulating = true; // Set flag that long press sim is active
+        longPressActive = true;
         disableGameControls(DOM_ELEMENTS.nextPlayButton);
         
-        longPressSimInterval = setInterval(() => {
-            if (!runSinglePlayAndUpdate()) {
-                stopLongPressSimulation();
-            }
-        }, SIM_INTERVAL_DELAY);
+        longPressLoop(); // Start the async loop
     }
 
     function stopLongPressSimulation() {
+        longPressActive = false; // Signal the loop to stop
+        // isLongPressSimulating flag will be reset by enableGameControls or runSinglePlayAndUpdate if game ends
+        // We need to ensure that if stopLongPressSimulation is called externally (e.g., mouseup),
+        // the isLongPressSimulating state is also reset if no batch sim is running.
+        if (!isBatchSimulating) { // Only enable if no other batch sim is running
+            isLongPressSimulating = false; // Reset this crucial flag here
+            enableGameControls(getGameState().gameOver);
+        }
+         // Clear any legacy interval if it was somehow set, though it shouldn't be used with the new loop
         if (longPressSimInterval) {
             clearInterval(longPressSimInterval);
             longPressSimInterval = null;
-        }
-        isLongPressSimulating = false;
-        if (!isBatchSimulating) {
-            enableGameControls(getGameState().gameOver);
         }
     }
 
@@ -230,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
     DOM_ELEMENTS.nextPlayButton.addEventListener('contextmenu', (e) => e.preventDefault());
 
     if (DOM_ELEMENTS.simInningButton) {
-        DOM_ELEMENTS.simInningButton.addEventListener('click', async () => {
+        DOM_ELEMENTS.simInningButton.addEventListener('click', async () => { // Make the handler async
             if (getGameState().gameOver || isLongPressSimulating || isBatchSimulating) return;
 
             disableGameControls(DOM_ELEMENTS.simInningButton);
@@ -239,29 +263,28 @@ document.addEventListener('DOMContentLoaded', () => {
             const initialInning = getGameState().currentInning;
             const initialHalf = getGameState().halfInning;
             
-            await new Promise(resolve => {
-                function simulateCurrentInningStep() {
-                    let currentSimState = getGameState();
-                    if (currentSimState.gameOver || 
-                        ((currentSimState.currentInning !== initialInning || currentSimState.halfInning !== initialHalf) && currentSimState.outs === 0)) {
-                        resolve();
-                        return;
-                    }
-                    playNextAtBat(currentTeamsData); 
-                    currentSimState = getGameState(); 
-                    if (!currentSimState.gameOver) {
-                        requestAnimationFrame(simulateCurrentInningStep);
-                    } else {
-                        resolve(); 
-                    }
+            // Helper function for simulation step, now async
+            async function simulateCurrentInningStepAsync() {
+                let currentSimState = getGameState();
+                if (currentSimState.gameOver || 
+                    ((currentSimState.currentInning !== initialInning || currentSimState.halfInning !== initialHalf) && currentSimState.outs === 0)) {
+                    return true; // Indicate inning/game is done with this sim block
                 }
-                requestAnimationFrame(simulateCurrentInningStep);
-            });
+                await playNextAtBat(currentTeamsData); // Await the play
+                return false; // Indicate simulation should continue
+            }
+
+            // Loop using async/await with requestAnimationFrame for UI responsiveness
+            let doneWithInning = false;
+            while(!doneWithInning) {
+                doneWithInning = await simulateCurrentInningStepAsync();
+                if (getGameState().gameOver) break; // Exit if game ended mid-inning
+                // Yield to browser for UI updates
+                await new Promise(resolve => requestAnimationFrame(resolve));
+            }
             
             const finalGameState = getGameState();
             currentTeamRecords = loadData(TEAM_RECORDS_KEY, currentTeamRecords);
-            // DO NOT call prepareTeamsData here for current game's score display.
-            // currentTeamsData already holds the scores for the simulated inning.
             updateAllDisplays(finalGameState, currentTeamsData, currentTeamRecords);
             enableGameControls(finalGameState.gameOver);
             if (!finalGameState.gameOver) {
@@ -270,33 +293,37 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+
     async function handleSimulateGame() {
         if (getGameState().gameOver || isLongPressSimulating || isBatchSimulating) return;
 
         disableGameControls(DOM_ELEMENTS.simGameButton);
         updateOutcomeText("Simulating current game...", "GAME_EVENT");
 
-        await new Promise(resolve => {
-            function simulateGameStep() {
-                if (getGameState().gameOver) {
-                    resolve();
-                    return;
-                }
-                playNextAtBat(currentTeamsData); 
-                requestAnimationFrame(simulateGameStep);
+        // Helper function for simulation step, now async
+        async function simulateGameStepAsync() {
+            if (getGameState().gameOver) {
+                return true; // Indicate game is done
             }
-            requestAnimationFrame(simulateGameStep);
-        });
+            await playNextAtBat(currentTeamsData); // Await the play
+            return false; // Indicate simulation should continue
+        }
+
+        // Loop using async/await with requestAnimationFrame
+        let gameIsOverSimulating = false;
+        while(!gameIsOverSimulating) {
+            gameIsOverSimulating = await simulateGameStepAsync();
+            // Yield to browser for UI updates
+            await new Promise(resolve => requestAnimationFrame(resolve));
+        }
 
         const finalGameState = getGameState();
         currentTeamRecords = loadData(TEAM_RECORDS_KEY, currentTeamRecords);
-        // DO NOT call prepareTeamsData here. currentTeamsData has the game scores.
-        // If you need to refresh career stats for display AFTER this game,
-        // then call prepareTeamsData, but the scoreboard will show the fresh game state (all zeros).
-        // For now, we want to show the scores of the game just simulated.
         updateAllDisplays(finalGameState, currentTeamsData, currentTeamRecords);
         enableGameControls(finalGameState.gameOver);
+        // The outcome text will be "GAME OVER! ..." from endGame
     }
+    
 
     if (DOM_ELEMENTS.simGameButton) {
         DOM_ELEMENTS.simGameButton.addEventListener('click', handleSimulateGame);
@@ -306,7 +333,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isLongPressSimulating || isBatchSimulating) return;
 
         disableGameControls(DOM_ELEMENTS.sim10GamesButton);
-        updateOutcomeText(`Simulating ${numberOfGames} games... Please wait.`, "GAME_EVENT");
+        // Initial message before the loop starts
+        updateOutcomeText(`Preparing to simulate ${numberOfGames} games...`, "GAME_EVENT");
         
         if (DOM_ELEMENTS.sim10GamesButton) {
              DOM_ELEMENTS.sim10GamesButton.classList.add('simulating');
@@ -316,54 +344,67 @@ document.addEventListener('DOMContentLoaded', () => {
         const defaultIds = getDefaultTeamIds(); 
 
         for (let i = 0; i < numberOfGames; i++) {
-            currentTeamRecords = loadData(TEAM_RECORDS_KEY, {}); 
-            
+            // --- Start of a single game simulation ---
+            // Load records fresh for each game if that's the intent, 
+            // or load once at the start and save at the very end for performance.
+            // Current logic reloads records for each game but this might not reflect in team objects until prepareTeamsData.
+            let gameSpecificTeamRecords = loadData(TEAM_RECORDS_KEY, {}); 
+
             const awayIdToPlay = defaultIds.awayTeamId;
             const homeIdToPlay = defaultIds.homeTeamId;
 
-            if (!currentTeamRecords[awayIdToPlay]) {
-                currentTeamRecords[awayIdToPlay] = { name: "Default Away", wins: 0, losses: 0, starterIndex: 0 };
+            // Ensure records exist for names and starter index
+            if (!gameSpecificTeamRecords[awayIdToPlay]) {
+                gameSpecificTeamRecords[awayIdToPlay] = { name: "Away Team Temp", wins: 0, losses: 0, starterIndex: 0 };
             }
-            currentTeamRecords[awayIdToPlay].starterIndex = currentTeamRecords[awayIdToPlay].starterIndex || 0;
-            // Ensure name is updated from potentially fresh teamsData if we were to allow team selection
-            // For now, prepareTeamsData will get the name from teamsData.js
-            // currentTeamRecords[awayIdToPlay].name = currentTeamsData.away.name;
+            gameSpecificTeamRecords[awayIdToPlay].starterIndex = gameSpecificTeamRecords[awayIdToPlay].starterIndex || 0;
 
-
-            if (!currentTeamRecords[homeIdToPlay]) {
-                currentTeamRecords[homeIdToPlay] = { name: "Default Home", wins: 0, losses: 0, starterIndex: 0 };
+            if (!gameSpecificTeamRecords[homeIdToPlay]) {
+                gameSpecificTeamRecords[homeIdToPlay] = { name: "Home Team Temp", wins: 0, losses: 0, starterIndex: 0 };
             }
-            currentTeamRecords[homeIdToPlay].starterIndex = currentTeamRecords[homeIdToPlay].starterIndex || 0;
-            // currentTeamRecords[homeIdToPlay].name = currentTeamsData.home.name;
-
-
-            currentTeamsData = prepareTeamsData(awayIdToPlay, homeIdToPlay); // Prepare fresh game data, loads career stats
-            // Sync names back to records if prepareTeamsData got them from a definitive source (teamsData.js)
-            currentTeamRecords[awayIdToPlay].name = currentTeamsData.away.name;
-            currentTeamRecords[homeIdToPlay].name = currentTeamsData.home.name;
-
-
-            initializeGame(currentTeamsData, currentTeamRecords[awayIdToPlay].starterIndex, currentTeamRecords[homeIdToPlay].starterIndex);
+            gameSpecificTeamRecords[homeIdToPlay].starterIndex = gameSpecificTeamRecords[homeIdToPlay].starterIndex || 0;
             
-            updateOutcomeText(`Simulating Game ${i + 1} of ${numberOfGames}...`, "GAME_EVENT_MINOR");
+            // Prepare fresh game data for each game in the batch
+            currentTeamsData = prepareTeamsData(awayIdToPlay, homeIdToPlay); 
+            // Sync names from definitive source (teamsData via prepareTeamsData) to the records being used for this game
+            gameSpecificTeamRecords[awayIdToPlay].name = currentTeamsData.away.name;
+            gameSpecificTeamRecords[homeIdToPlay].name = currentTeamsData.home.name;
 
+            initializeGame(currentTeamsData, gameSpecificTeamRecords[awayIdToPlay].starterIndex, gameSpecificTeamRecords[homeIdToPlay].starterIndex);
+            
+            // UI update for the start of each new game in the batch
+            updateOutcomeText(`Simulating Game ${i + 1} of ${numberOfGames}...`, "GAME_EVENT_MINOR");
+            // A brief pause to allow UI to update, especially the "Simulating Game X of Y" message
+            await new Promise(resolve => setTimeout(resolve, 50)); // 50ms delay
+
+            // THIS IS THE CORRECTED LOOP
             while (!getGameState().gameOver) {
-                playNextAtBat(currentTeamsData); 
+                await playNextAtBat(currentTeamsData); // AWAIT the async function
+                // No UI update here per play to speed up batch simulation
+                // If you need UI updates per play even in batch mode, add them, but it will be slower.
             }
+            // --- End of a single game simulation (gameState.gameOver is true) ---
+            // `endGame` inside `playNextAtBat` (or its chain) should have saved teamRecords and playerStats for game `i`.
         }
 
         // After all games, load the final accumulated stats and records for display
-        currentTeamsData = prepareTeamsData(defaultIds.awayTeamId, defaultIds.homeTeamId); // Loads final career stats
-        currentTeamRecords = loadData(TEAM_RECORDS_KEY, currentTeamRecords); 
+        // This prepares currentTeamsData with career stats for UI, and currentTeamRecords for records display.
+        currentTeamsData = prepareTeamsData(defaultIds.awayTeamId, defaultIds.homeTeamId); 
+        currentTeamRecords = loadData(TEAM_RECORDS_KEY, {}); // Load the most up-to-date records
         
+        // Update all UI elements based on the state *after* all simulations
+        // The getGameState() here will reflect the *last* game's final state.
+        // We might want to reset or show a summary state instead.
+        // For now, it updates based on the last game's state, but records will be cumulative.
         updateAllDisplays(getGameState(), currentTeamsData, currentTeamRecords); 
-        enableGameControls(false); 
+        enableGameControls(false); // Enable controls, assuming Sim 10 games doesn't leave a game "in progress" for Next Batter
+        
         if (DOM_ELEMENTS.sim10GamesButton) {
-            DOM_ELEMENTS.sim10GamesButton.disabled = false;
+            DOM_ELEMENTS.sim10GamesButton.disabled = false; // Explicitly enable
             DOM_ELEMENTS.sim10GamesButton.classList.remove('simulating');
             DOM_ELEMENTS.sim10GamesButton.textContent = 'Sim 10 Games';
         }
-        updateOutcomeText(`${numberOfGames} games simulated. Check updated team records and player stats.`, "GAME_EVENT");
+        updateOutcomeText(`${numberOfGames} games simulated. Records and player stats updated.`, "GAME_EVENT");
     }
 
 
